@@ -122,14 +122,13 @@ function clientCloseHandler(client) {
   log("Close Handle: " + client.caption + " - " + client.desktop);
 
   // If desktop is -1, this window is on all desktops and there is nothig to do
-  if (client.desktop != -1) {
-    if (clientsInDesktop(client.desktop).length == 1) {
-      log("clientCloseHandler: will reduce max desktops");
-      pullClientsAfterDesktop(client.desktop);
-      workspace.currentDesktop--;
-      client.desktop--;
-      workspace.desktops--;
-    }
+  // If desktop is 1, this is the last desktop
+  if (client.desktop > 1 && clientsInDesktop(client.desktop).length <= 1) {
+    log("clientCloseHandler: will reduce max desktops");
+    pullClientsAfterDesktop(client.desktop);
+    workspace.currentDesktop--;
+    client.desktop--;
+    workspace.desktops--;
   }
 }
 
