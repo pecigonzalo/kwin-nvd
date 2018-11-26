@@ -1,6 +1,4 @@
-var state = {
-  savedDesktops: {}
-};
+var LOCK = false
 
 function log(msg) {
   print("NVD: " + msg);
@@ -8,12 +6,12 @@ function log(msg) {
 
 function createDesktop() {
   log("createDesktop: true");
-  var next = workspace.desktops + 1;
-  workspace.desktops = next;
-  return next;
+  workspace.desktops = workspace.desktops + 1;
+  return workspace.desktops;
 }
 
 function clientsInDesktop(desktop) {
+  log("clientsInDesktop " + desktop);
   return workspace.clientList().filter(
     function(client) {
       if (client.desktop == desktop) {
@@ -25,9 +23,13 @@ function clientsInDesktop(desktop) {
 }
 
 function clientsAfterDesktop(desktop) {
+  log("clientsAfterDesktop " + desktop);
   return workspace.clientList().filter(
     function(client) {
-      return client.desktop > desktop;
+      if (client.desktop > desktop) {
+        log("clientsAfterDesktop " + desktop + ": " + client.caption);
+        return client.desktop;
+      }
     }
   );
 }
@@ -63,54 +65,45 @@ function moveToNewDesktop(client) {
   // Only maximize to new desktop is current desktop is full
   if (clientsInDesktop(client.desktop).length > 1) {
     log("Curent desktop has clients, moving to new desktop");
-    // Save window state
-    state.savedDesktops[client.windowId] = client.desktop;
     if (client.desktop == workspace.desktops) {
       createDesktop();
     } else {
       pushClientsAfterDesktop(client.desktop);
     }
-    client.desktop++;
     workspace.currentDesktop++;
+    client.desktop = workspace.currentDesktop;
     workspace.activateClient = client;
   }
 }
 
 function moveBack(client) {
-  var old = client.desktop;
-  var saved = this.state.savedDesktops[client.windowId];
-  if (saved === undefined) {
-    log("Ignoring window not previously seen: " + client.caption);
-  } else {
-    log("Resotre client desktop to " + saved);
-    client.desktop = saved;
-    workspace.currentDesktop = saved;
-    workspace.activateClient = client;
-    if (clientsInDesktop(old).length == 0) {
-      log("moveBack: will reduce max desktops");
-      pullClientsAfterDesktop(old);
-      workspace.desktops--;
+    if (clientsInDesktop(client.desktop).length <= 1) {
+        log("Resotre client desktop to left of: " + client.desktop);
+        workspace.currentDesktop--;
+        client.desktop = workspace.currentDesktop;
+        workspace.activateClient = client;
+        pullClientsAfterDesktop(client.desktop);
+        workspace.desktops--;
     }
-  }
 }
 
-function clientMaximizeHandle(client, h, v) {
-  log("Maximize Handle: " + client.caption + " - " + client.desktop);
+function clientMaximizeHandler(client, h, v) {
+  log("clientMaximizeHandler: " + client.caption + " - " + client.desktop);
 
   // If desktop is -1, this window is on all desktops and there is nothig to do
   if (client.desktop != -1) {
     if (h && v) {
-      log("Maximize Handle: maximize");
+      log("clientMaximizeHandler: maximize");
       moveToNewDesktop(client);
     } else {
-      log("Maximize Handle: unmaximize");
+      log("clientMaximizeHandler: unmaximize");
       moveBack(client);
     }
   }
 }
 
 function clientUnminimizedHandler(client) {
-  log("Unminimize Handle: " + client.caption + " - " + client.desktop);
+  log("clientUnminimizedHandler: " + client.caption + " - " + client.desktop);
 
   // If desktop is -1, this window is on all desktops and there is nothig to do
   if (client.desktop != -1) {
@@ -119,22 +112,30 @@ function clientUnminimizedHandler(client) {
 }
 
 function clientCloseHandler(client) {
-  log("Close Handle: " + client.caption + " - " + client.desktop);
-
-  // If desktop is -1, this window is on all desktops and there is nothig to do
-  // If desktop is 1, this is the last desktop
-  if (client.desktop > 1 && clientsInDesktop(client.desktop).length <= 1) {
-    log("clientCloseHandler: will reduce max desktops");
-    pullClientsAfterDesktop(client.desktop);
+    log("clientCloseHandler: " + client.caption + " - " + client.desktop);
+    if (client.skipTaskbar || client.modal || client.transient){
+      log("clientCloseHandler: skip temp client")
+      return;
+    }
+    //moveBack(client);
     workspace.currentDesktop--;
-    client.desktop--;
-    workspace.desktops--;
-  }
+    var test2 = client.desktop - 1
+    log("should move client to: " + test2)
+    // client.desktop = test2
+    var test = workspace.desktops - 1
+    log("should set: " + test)
+    workspace.desktops = workspace.desktops - 1
+
+}
+
+function clientMinimizedHandler(client) {
+  log("clientMinimizedHandler: " + client.caption + " - " + client.desktop);
+  moveBack(client);
 }
 
 log("Installing shortcuts");
-workspace.clientMaximizeSet.connect(clientMaximizeHandle);
-workspace.clientUnminimized.connect(clientUnminimizedHandler);
-workspace.clientMinimized.connect(clientCloseHandler);
+workspace.clientMaximizeSet.connect(clientMaximizeHandler);
+// workspace.clientUnminimized.connect(clientUnminimizedHandler);
+// workspace.clientMinimized.connect(clientMinimizedHandler);
 workspace.clientRemoved.connect(clientCloseHandler);
 log("Shortcuts installed");
