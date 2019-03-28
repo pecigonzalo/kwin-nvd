@@ -95,6 +95,7 @@ function moveBack(client) {
       workspace.activateClient = client;
       pullClientsAfterDesktop(client.desktop);
       workspace.desktops--;
+      delete state.savedDesktops[client.windowId]; // Remove IDs after we have returned the window
     }
   }
 }
@@ -118,7 +119,7 @@ function shouldSkip(client, desktop) {
 
 function clientMaximizeHandler(client, h, v) {
   log("clientMaximizeHandler: " + client.caption + " - " + client.desktop);
-  if (shouldSkip(client, cd)) {
+  if (shouldSkip(client, client.desktop)) {
     return;
   }
 
@@ -137,7 +138,8 @@ function clientCloseHandler(client) {
   var id = client.windowId;
   log("clientCloseHandler: " + cc + " - Desktop: " + cd);
 
-  if (id in state.savedDesktops) {
+  // Prevent removing desktop if we close any non maximized window/known
+  if (!(id in state.savedDesktops)) {
     log("Not a known window, skipping")
     return;
   }
@@ -148,6 +150,7 @@ function clientCloseHandler(client) {
 
   pullClientsAfterDesktop(cd);
   workspace.desktops--;
+  delete state.savedDesktops[id];
 }
 
 function install() {
