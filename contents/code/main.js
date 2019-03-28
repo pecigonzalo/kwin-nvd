@@ -84,8 +84,8 @@ function moveToNewDesktop(client) {
       createDesktop();
       pushClientsAfterDesktop(client.desktop);
     }
-    workspace.currentDesktop++;
     client.desktop = workspace.currentDesktop;
+    workspace.currentDesktop = client.desktop;
     workspace.activateClient = client;
   }
 }
@@ -99,7 +99,7 @@ function moveBack(client) {
       var current = client.desktop;
       log("Resotre client to desktop: " + saved);
       client.desktop = saved;
-      workspace.currentDesktop = saved;
+      workspace.currentDesktop = client.desktop;
       workspace.activateClient = client;
       pullClientsAfterDesktop(client.desktop);
       workspace.desktops--;
