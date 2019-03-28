@@ -43,7 +43,10 @@ function pullClientsAfterDesktop(desktop) {
     clientsAfter.forEach(
       function (c) {
         c.desktop--;
-        state.savedDesktops[c.windowId] = c.desktop;
+        // If we know the window, save its new state
+        if (c.windowId in state.savedDesktops) {
+          state.savedDesktops[c.windowId] = c.desktop;
+        }
       }
     );
   }
@@ -56,11 +59,15 @@ function pushClientsAfterDesktop(desktop) {
     clientsAfter.forEach(
       function (c) {
         log("pushClientsAfterDesktop: " + c.caption);
-        if (c.desktop == workspace.desktops) {
-          createDesktop();
-        }
+        // To prevent eating user desktops, always create new ones
+        // if (c.desktop == workspace.desktops) {
+        //   createDesktop();
+        // }
         c.desktop++;
-        state.savedDesktops[c.windowId] = c.desktop;
+        // If we know the window, save its new state
+        if (c.windowId in state.savedDesktops) {
+          state.savedDesktops[c.windowId] = c.desktop;
+        }
       }
     );
   }
@@ -74,6 +81,7 @@ function moveToNewDesktop(client) {
     if (client.desktop == workspace.desktops) {
       createDesktop();
     } else {
+      createDesktop();
       pushClientsAfterDesktop(client.desktop);
     }
     workspace.currentDesktop++;
