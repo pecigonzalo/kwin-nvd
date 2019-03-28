@@ -84,8 +84,9 @@ function moveToNewDesktop(client) {
       createDesktop();
       pushClientsAfterDesktop(client.desktop);
     }
-    client.desktop = workspace.currentDesktop++;
-    workspace.currentDesktop = client.desktop;
+    var newdesk = workspace.currentDesktop + 1;
+    client.desktop = newdesk;
+    workspace.currentDesktop = newdesk;
     workspace.activateClient = client;
   }
 }
@@ -141,9 +142,9 @@ function clientMaximizeHandler(client, h, v) {
 }
 
 function clientCloseHandler(client) {
+  var id = client.windowId;
   var cd = client.desktop;
   var cc = client.caption;
-  var id = client.windowId;
   log("clientCloseHandler: " + cc + " - Desktop: " + cd);
 
   // Prevent removing desktop if we close any non maximized window/known
