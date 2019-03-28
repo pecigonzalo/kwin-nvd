@@ -136,9 +136,16 @@ function clientCloseHandler(client) {
   var cc = client.caption;
   var id = client.windowId;
   log("clientCloseHandler: " + cc + " - Desktop: " + cd);
+
+  if (id in state.savedDesktops) {
+    log("Not a known window, skipping")
+    return;
+  }
+
   if (shouldSkip(client, cd)) {
     return;
   }
+
   pullClientsAfterDesktop(cd);
   workspace.desktops--;
 }
