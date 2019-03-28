@@ -84,7 +84,7 @@ function moveToNewDesktop(client) {
       createDesktop();
       pushClientsAfterDesktop(client.desktop);
     }
-    client.desktop = workspace.currentDesktop;
+    client.desktop = workspace.currentDesktop++;
     workspace.currentDesktop = client.desktop;
     workspace.activateClient = client;
   }
