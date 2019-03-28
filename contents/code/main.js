@@ -59,7 +59,7 @@ function pushClientsAfterDesktop(desktop) {
     clientsAfter.forEach(
       function (c) {
         log("pushClientsAfterDesktop: " + c.caption);
-        // To prevent eating user desktops, always create new ones
+        // Commented to prevent eating user desktops, always create new ones. TODO: Create a setting for it
         // if (c.desktop == workspace.desktops) {
         //   createDesktop();
         // }
@@ -103,7 +103,6 @@ function moveBack(client) {
       workspace.activateClient = client;
       pullClientsAfterDesktop(client.desktop);
       workspace.desktops--;
-      delete state.savedDesktops[client.windowId]; // Remove IDs after we have returned the window
     }
   }
 }
@@ -137,6 +136,7 @@ function clientMaximizeHandler(client, h, v) {
   } else {
     log("clientMaximizeHandler: unmaximize");
     moveBack(client);
+    delete state.savedDesktops[client.windowId]; // Remove IDs after we have returned the window
   }
 }
 
