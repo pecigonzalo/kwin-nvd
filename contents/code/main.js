@@ -14,7 +14,7 @@ function createDesktop() {
 }
 
 function clientsInDesktop(desktop) {
-  log("clientsInDesktop " + desktop);
+  log("clientsInDesktop " + desktop + " list");
   return workspace.clientList().filter(
     function (client) {
       if (client.desktop == desktop) {
@@ -26,7 +26,7 @@ function clientsInDesktop(desktop) {
 }
 
 function clientsAfterDesktop(desktop) {
-  log("clientsAfterDesktop " + desktop);
+  log("clientsAfterDesktop " + desktop + " list");
   return workspace.clientList().filter(
     function (client) {
       if (client.desktop > desktop) {
@@ -99,39 +99,48 @@ function moveBack(client) {
   }
 }
 
-function shouldSkip(client) {
+function shouldSkip(client, desktop) {
+  // If desktop is -1, this window is on all desktops and there is nothig to do
+  if (desktop == -1) {
+    log("Client: '" + client.caption + "' will skip handle, no desktop");
+    return true;
+  }
+
   // Detect clients that should not action
   if (client.skipTaskbar || client.modal || client.transient) {
-    log("clientCloseHandler: skip temp client")
+    log("Client: '" + client.caption + "' will skip handle");
     return true;
-  } else {
-    return false;
   }
+
+  log("Client: '" + client.caption + "' will be handled");
+  return false;
 }
 
 function clientMaximizeHandler(client, h, v) {
   log("clientMaximizeHandler: " + client.caption + " - " + client.desktop);
-  if (shouldSkip) {
+  if (shouldSkip(client, cd)) {
     return;
   }
-  // If desktop is -1, this window is on all desktops and there is nothig to do
-  if (client.desktop != -1) {
-    if (h && v) {
-      log("clientMaximizeHandler: maximize");
-      moveToNewDesktop(client);
-    } else {
-      log("clientMaximizeHandler: unmaximize");
-      moveBack(client);
-    }
+
+  if (h && v) {
+    log("clientMaximizeHandler: maximize");
+    moveToNewDesktop(client);
+  } else {
+    log("clientMaximizeHandler: unmaximize");
+    moveBack(client);
   }
 }
 
 function clientCloseHandler(client) {
-  log("clientCloseHandler: " + client.caption + " - " + client.desktop);
-  if (shouldSkip) {
+  var cd = client.desktop;
+  var cc = client.caption;
+  var id = client.windowId;
+  log("clientCloseHandler: " + cc + " - Desktop: " + cd);
+  if (shouldSkip(client, cd)) {
     return;
   }
-  moveBack(client);
+  pullClientsAfterDesktop(cd);
+  workspace.desktops--;
 }
 
 function install() {
